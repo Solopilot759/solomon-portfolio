@@ -10,88 +10,66 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const menuToggle = document.querySelector(".menu-toggle");
     const navLinks = document.querySelector(".nav-links");
+    const header = document.querySelector(".navbar");
 
-    if (menuToggle && navLinks) {
+    if (menuToggle && navLinks && header) {
+
+        const scrim = document.createElement("div");
+        scrim.className = "nav-scrim";
+        header.after(scrim);
+
+        const closeMenu = () => {
+            navLinks.classList.remove("nav-open");
+            scrim.classList.remove("nav-open");
+            menuToggle.setAttribute("aria-expanded", "false");
+            document.body.classList.remove("menu-locked");
+        };
+
+        const openMenu = () => {
+            navLinks.classList.add("nav-open");
+            scrim.classList.add("nav-open");
+            menuToggle.setAttribute("aria-expanded", "true");
+            document.body.classList.add("menu-locked");
+        };
 
         menuToggle.addEventListener("click", () => {
 
-            navLinks.classList.toggle("nav-open");
+            const isOpen = navLinks.classList.contains("nav-open");
 
-            menuToggle.classList.toggle("menu-open");
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
 
         });
 
-
-        /* Close menu after clicking a link */
+        scrim.addEventListener("click", closeMenu);
 
         navLinks.querySelectorAll("a").forEach(link => {
+            link.addEventListener("click", closeMenu);
+        });
 
-            link.addEventListener("click", () => {
+        window.addEventListener("keydown", event => {
 
-                navLinks.classList.remove("nav-open");
+            if (event.key === "Escape") {
+                closeMenu();
+            }
 
-                menuToggle.classList.remove("menu-open");
+        });
 
-            });
+        /* Close the drawer if the viewport grows past the
+           mobile breakpoint while it's open */
+
+        window.addEventListener("resize", () => {
+
+            if (window.innerWidth >= 900) {
+                closeMenu();
+            }
 
         });
 
     }
-
-
-    /* =================================================
-       SCROLL REVEAL
-    ================================================= */
-
-    const revealElements = document.querySelectorAll(
-        ".section-heading, " +
-        ".project-card, " +
-        ".projects-cta, " +
-        ".about-grid, " +
-        ".interest-card, " +
-        ".focus-content, " +
-        ".skill-row, " +
-        ".framework-card, " +
-        ".tools-cloud, " +
-        ".learning-content, " +
-        ".contact-info, " +
-        ".contact-form-wrapper, " +
-        ".case-overview, " +
-        ".case-image, " +
-        ".case-tech, " +
-        ".next-project"
-    );
-
-
-    const revealObserver = new IntersectionObserver(
-        (entries, observer) => {
-
-            entries.forEach(entry => {
-
-                if (!entry.isIntersecting) {
-                    return;
-                }
-
-                entry.target.classList.add("revealed");
-
-                observer.unobserve(entry.target);
-
-            });
-
-        },
-        {
-            threshold: 0.12
-        }
-    );
-
-
-    revealElements.forEach(element => {
-
-        element.classList.add("reveal");
-
-        revealObserver.observe(element);
-
-    });
 
 
     /* =================================================
@@ -102,19 +80,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (navbar) {
 
-        window.addEventListener("scroll", () => {
+        const updateNavbar = () => {
 
             if (window.scrollY > 40) {
-
                 navbar.classList.add("navbar-scrolled");
-
             } else {
-
                 navbar.classList.remove("navbar-scrolled");
-
             }
 
-        });
+        };
+
+        updateNavbar();
+
+        window.addEventListener("scroll", updateNavbar, { passive: true });
 
     }
 
@@ -126,19 +104,68 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentPage =
         window.location.pathname.split("/").pop() || "index.html";
 
-
     document.querySelectorAll(".nav-links a").forEach(link => {
 
         const linkPage =
             link.getAttribute("href").split("/").pop();
 
-        if (linkPage === currentPage) {
-
-            link.classList.add("active");
-
-        }
+        link.classList.toggle("active", linkPage === currentPage);
 
     });
+
+
+    /* =================================================
+       SCROLL REVEAL
+    ================================================= */
+
+    const revealElements = document.querySelectorAll(
+        ".section-heading, " +
+        ".home-section-heading, " +
+        ".home-project-row, " +
+        ".project-card, " +
+        ".projects-cta, " +
+        ".about-grid, " +
+        ".interest-card, " +
+        ".focus-content, " +
+        ".skill-row, " +
+        ".framework-card, " +
+        ".tools-cloud, " +
+        ".learning-content, " +
+        ".contact-info, " +
+        ".contact-form-wrapper, " +
+        ".project-feature, " +
+        ".case-overview, " +
+        ".case-image, " +
+        ".case-tech, " +
+        ".next-project"
+    );
+
+    if ("IntersectionObserver" in window) {
+
+        const revealObserver = new IntersectionObserver(
+            (entries, observer) => {
+
+                entries.forEach(entry => {
+
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+
+                    entry.target.classList.add("revealed");
+                    observer.unobserve(entry.target);
+
+                });
+
+            },
+            { threshold: 0.12 }
+        );
+
+        revealElements.forEach(element => {
+            element.classList.add("reveal");
+            revealObserver.observe(element);
+        });
+
+    }
 
 
     /* =================================================
@@ -149,11 +176,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         link.addEventListener("click", event => {
 
-            const targetId =
-                link.getAttribute("href");
+            const targetId = link.getAttribute("href");
 
-            const target =
-                document.querySelector(targetId);
+            if (targetId.length < 2) {
+                return;
+            }
+
+            const target = document.querySelector(targetId);
 
             if (!target) {
                 return;
@@ -172,63 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       BUTTON / LINK MAGNETIC FEEL
-    ================================================= */
-
-    const interactiveElements = document.querySelectorAll(
-        ".project-link, " +
-        ".email-cta, " +
-        ".submit-button"
-    );
-
-
-    interactiveElements.forEach(element => {
-
-        element.addEventListener("mouseenter", () => {
-
-            element.style.transform =
-                "translateY(-3px)";
-
-        });
-
-
-        element.addEventListener("mouseleave", () => {
-
-            element.style.transform =
-                "";
-
-        });
-
-    });
-
-
-    /* =================================================
        PAGE LOAD
     ================================================= */
 
     document.body.classList.add("page-loaded");
 
 });
-const menuToggle = document.querySelector(".menu-toggle");
-const navLinks = document.querySelector(".nav-links");
-
-if (menuToggle && navLinks) {
-
-    menuToggle.addEventListener("click", () => {
-
-        navLinks.classList.toggle("active");
-
-    });
-
-
-    navLinks.querySelectorAll("a").forEach(link => {
-
-        link.addEventListener("click", () => {
-
-            navLinks.classList.remove("active");
-
-        });
-
-    });
-
-}
